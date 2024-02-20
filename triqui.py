@@ -28,12 +28,13 @@ board = [[" " for _ in range(3)] for _ in range(3)]
 values_board = [["0" for _ in range(3)] for _ in range(3)]
 
 
-def print_board(board):
+def print_board(board, name):
     print("-" * 5)
     for row in board:
         print("|".join(row))
         print("-" * 5)
 
+    print("==========================================>"+name)
 
 
 
@@ -44,19 +45,22 @@ def check_row(row):
     total = 0
     for column in range(3):
         if board[row][column] == "X":
-            total += 3
+            total += 5
         elif board[row][column] == "O":
-            total += 2
-            
+            total += 4
+        elif board[row][column] == " ":  
+            total += 1
     return total
 
 def check_column(column):
     total = 0
     for row in range(3):
         if board[row][column] == "X":
-            total += 3
+            total += 5
         elif board[row][column] == "O":
-            total += 2
+            total += 4
+        elif board[row][column] == " ":  
+            total += 1
             
     return total
     
@@ -64,9 +68,11 @@ def check_diagonal():
     total = 0
     for diagonal in range(3):
         if board[diagonal][diagonal] == "X":
-            total += 3
+            total += 5
         elif board[diagonal][diagonal] == "O":
-            total += 2
+            total += 4
+        elif board[diagonal][diagonal] == " ":  
+            total += 1
     return total
 
 def check_reversed_diagonal():
@@ -74,10 +80,11 @@ def check_reversed_diagonal():
     for reversedDiag in range(3):
 
         if board[2 - reversedDiag][reversedDiag] == "X":
-            total += 3
-            print(2 - reversedDiag, reversedDiag)
+            total += 5
         elif board[2 - reversedDiag][reversedDiag] == "O":
-            total += 2
+            total += 4
+        elif board[2 - reversedDiag][reversedDiag]  == " ":
+            total += 1
     return total
 
 def win():
@@ -127,7 +134,7 @@ def win():
 
         if board[2 - reversedDiag][reversedDiag] == "X":
             total += 10
-            print(2 - reversedDiag, reversedDiag)
+            
         elif board[2 - reversedDiag][reversedDiag] == "O":
             total += 1
     if total == 30:
@@ -164,22 +171,31 @@ def heuristic():
             else:
                 total+= check_row(row) 
                 total+= check_column(column)                
-                values_board[row][column] = str(total)
+                values_board[row][column] = str(total )
     
     for diagonal in range(3):
         if int(values_board[diagonal][diagonal]) == -1:
             continue
         else:
             total = check_diagonal()
-            if total> int(values_board[diagonal][diagonal]) :
-                values_board[diagonal][diagonal] = str(total)
+            values_board[diagonal][diagonal] =str( int(values_board[diagonal][diagonal] ) + total)
                 
             total = check_reversed_diagonal()
-            if total> int(values_board[diagonal][diagonal]) :
-                values_board[2 - diagonal][diagonal] = str(total)
+            values_board[diagonal][diagonal] =str( int(values_board[2-diagonal][diagonal] ) + total)
+            
                
                 
-
+def best_move():
+    best_position = [0,0]
+    highest_value = 0
+    for row in range(3):
+        for column in range(3):
+            if int(values_board[row][column]) >= highest_value:
+                best_position[0]= row
+                best_position[1]= column
+                highest_value=int(values_board[row][column])
+                
+    return best_position         
 # ==========================================>GAMEPLAY
 
 
@@ -188,29 +204,34 @@ def play():
     playerTurn = True
     playedTurns = 0
     while keep_playing:
-        row = int(input("Ingrese la fila: "))
-        column = int(input("Ingrese la columna: "))
-        valid = validMove(row, column)
-        if valid:
-            playedTurns += 1
-        if valid is True and playerTurn is True:
-            board[row][column] = "X"
-            values_board[row][column] = "-1"
-            playerTurn = turn(playerTurn)
+        
+        if playerTurn is True:
+            row = int(input("Ingrese la fila: "))
+            column = int(input("Ingrese la columna: "))
+            valid = validMove(row, column)
+            if valid:
+                playedTurns += 1
+                board[row][column] = "X"
+                values_board[row][column] = "-1"
+                playerTurn = turn(playerTurn)
+            else:
+                print("Ingrese un movimiento valido.")
+                continue
 
-        elif valid is True and playerTurn is False:
+
+        elif  playerTurn is False:
+            playedTurns += 1
+            row, column = best_move()
             board[row][column] = "O"
             values_board[row][column] = "-1"
             playerTurn = turn(playerTurn)
-        else:
-            print("Ingrese un movimiento valido.")
-
-        print_board(board)
+            
+        
+        print_board(board,"Game")
         heuristic()
-        print_board(values_board)
+        print_board(values_board,"Heuristic")
 
         if playedTurns >= 5:
-            print("evaluate winner")
             winner = win()
 
             if winner:
